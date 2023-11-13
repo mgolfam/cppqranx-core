@@ -1,0 +1,46 @@
+name: CMake Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up CMake
+      uses: actions/setup-cmake@v2
+      with:
+        cmake-version: '3.20.0'  # You can adjust the CMake version
+
+    - name: Configure and build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+      working-directory: ${{ github.workspace }}
+
+    - name: Create binaries directory
+      run: mkdir binaries
+
+    - name: Copy library files to binaries directory
+      run: cp build/libmylib.so binaries/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          binaries/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
